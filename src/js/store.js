@@ -1,9 +1,11 @@
+import lessonsData from '../data/lessons.json';
+
 /**
  * Simple State Management Store
  */
 export const Store = {
     state: {
-        lessons: [],
+        lessons: lessonsData,
         currentLessonId: null,
         currentQuestionIndex: 0,
         answers: {}, // { lessonId: { questionId: 'userAnswer' } }
@@ -15,8 +17,7 @@ export const Store = {
 
     async init() {
         try {
-            const response = await fetch('./src/data/lessons.json');
-            this.state.lessons = await response.json();
+            // Already loaded via import
             this.loadProgress();
             this.notify();
         } catch (e) {

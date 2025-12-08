@@ -200,6 +200,21 @@ body {
   text-transform: uppercase;
 }
 
+.tag-elementary {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.tag-intermediate {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.tag-advanced {
+  background: #fdf2f8;
+  color: #be185d;
+}
+
 /* Question Box */
 .q-box {
   background: var(--surface);

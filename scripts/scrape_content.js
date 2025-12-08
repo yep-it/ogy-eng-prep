@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const OUTPUT_FILE = './src/data/lessons.json';
 
+
 // EXACT LIST
 const EXERCISE_URLS = [
     "https://www.english-grammar.at/online_exercises/prepositions/prep042-in-at-on.htm",
@@ -81,6 +82,74 @@ function generateOptions(correct) {
     return Array.from(opts).sort(() => Math.random() - 0.5);
 }
 
+// Map store for difficulty levels
+const difficultyMap = new Map();
+
+async function scrapeDifficultyLevels() {
+    const indexUrl = "https://www.english-grammar.at/online_exercises/prepositions/preposition-index.htm";
+    try {
+        console.log(`Scraping index for difficulty levels: ${indexUrl}`);
+        const response = await fetch(indexUrl);
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+        const html = await response.text();
+        const dom = new JSDOM(html);
+        const doc = dom.window.document;
+
+        // The index page typically has tables or lists with links and difficulty levels.
+        // Looking at the provided URL structure, we can try to find links to our exercises and map them to adjacent text or columns.
+        // Assuming a table structure or list with icons/text indicating level.
+
+        // Let's look for all links in the content area
+        const links = doc.querySelectorAll('a');
+        links.forEach(a => {
+            const href = a.href;
+            if (!href) return;
+
+            // Normalize href to match our list (which are full URLs)
+            // The links in index might be relative
+            let fullUrl = href;
+            if (!href.startsWith('http')) {
+                fullUrl = new URL(href, indexUrl).href;
+            }
+
+            // Check if this link corresponds to one of our target exercises
+            // We can match by the filename part
+            const filename = fullUrl.split('/').pop();
+
+            // Now find the difficulty level. It's often in a neighboring column or image alt text
+            // Common pattern: <tr><td><a href="...">Title</a></td><td><img ... alt="Intermediate"></td></tr>
+            // Or text content " - Intermediate"
+
+            let level = "Elementary"; // Default
+
+            // Strategy 1: Check parent row (tr) for images with alt text
+            const row = a.closest('tr');
+            if (row) {
+                const img = row.querySelector('img[alt="Elementary"], img[alt="Intermediate"], img[alt="Advanced"]');
+                if (img) {
+                    level = img.getAttribute('alt');
+                }
+            }
+
+            // Strategy 2: Check standard listing containers if not in table
+            // Sometimes it's a list item
+            if (level === "Elementary") {
+                const li = a.closest('li');
+                if (li && li.textContent.includes('Intermediate')) level = "Intermediate";
+                if (li && li.textContent.includes('Advanced')) level = "Advanced";
+            }
+
+            // Store mapping based on filename because base URLs might slightly differ
+            difficultyMap.set(filename, level);
+        });
+
+        console.log(`Found difficulty levels for ${difficultyMap.size} lessons.`);
+
+    } catch (e) {
+        console.error(`Error scraping index: ${e.message}`);
+    }
+}
+
 async function scrapeLesson(url) {
     try {
         const response = await fetch(url);
@@ -90,6 +159,7 @@ async function scrapeLesson(url) {
         const doc = dom.window.document;
 
         const id = url.split('/').pop().replace('.htm', '');
+        const filename = url.split('/').pop();
         const title = doc.querySelector('h1')?.textContent.trim() || doc.querySelector('h2')?.textContent.trim() || id;
 
         // Answers
@@ -225,9 +295,13 @@ async function scrapeLesson(url) {
         // Sort by ID to ensure order
         sentences.sort((a, b) => a.id - b.id);
 
+        // Determine level from map
+        const level = difficultyMap.get(filename) || "Elementary";
+
         return {
             id,
             title,
+            level, // Add level field
             sentences
         };
     } catch (e) {
@@ -241,6 +315,9 @@ async function main() {
     const dataDir = path.dirname(OUTPUT_FILE);
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
+    // Pre-fetch difficulty levels
+    await scrapeDifficultyLevels();
+
     console.log(`Starting scraper for ${EXERCISE_URLS.length} URLs...`);
     let count = 0;
 
@@ -250,7 +327,7 @@ async function main() {
         const l = await scrapeLesson(url);
         if (l) {
             lessons.push(l);
-            console.log(`OK (${l.sentences.length})`);
+            console.log(`OK (${l.sentences.length}) [${l.level}]`);
         } else {
             console.log(`FAILED`);
         }

@@ -24,7 +24,7 @@ function updateGlobalStats() {
             const userAns = lessonAnswers[qId];
             const q = lesson.sentences.find(s => s.id == qId);
             if (q) {
-                if (q.correct === userAns) correct++;
+                if (userAns.trim().toLowerCase() === q.correct.trim().toLowerCase()) correct++;
                 else mistakes++;
             }
         });
@@ -55,7 +55,7 @@ function renderSidebar() {
         item.innerHTML = `
             <h4>${lesson.title}</h4>
             <div class="lesson-meta">
-                <span class="tag">ELEMENTARY</span> 
+                <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span> 
                 <span>${progressPct}% (${answeredCount}/${total})</span>
             </div>
         `;
@@ -97,7 +97,9 @@ function QuestionView(lessonId) {
     const question = lesson.sentences[index];
     const userAnswer = Store.state.answers[lessonId]?.[question.id];
     const isAnswered = !!userAnswer;
-    const isCorrect = userAnswer === question.correct;
+
+    // Case-insensitive check
+    const isCorrect = isAnswered && (userAnswer.trim().toLowerCase() === question.correct.trim().toLowerCase());
 
     // Split sentence
     const parts = (question.text || "").split('____');
@@ -110,7 +112,7 @@ function QuestionView(lessonId) {
     container.innerHTML = `
         <div class="q-info">
             <span>${index + 1} / ${lesson.sentences.length}</span>
-            <span class="tag">ELEMENTARY</span>
+            <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span>
         </div>
 
         <div class="q-box">
@@ -144,8 +146,18 @@ function QuestionView(lessonId) {
 
         if (isAnswered) {
             btn.disabled = true;
-            if (opt === question.correct) btn.classList.add('correct');
-            if (opt === userAnswer && !isCorrect) btn.classList.add('wrong');
+
+            const isOptCorrect = opt.trim().toLowerCase() === question.correct.trim().toLowerCase();
+            const isOptUser = opt === userAnswer; // Keep user selection exact for visual feedback of what they clicked? Or normalize? Let's check exact match for what they clicked.
+
+            if (isOptCorrect) btn.classList.add('correct');
+            // If this option is what the user picked, and it wasn't the correct one (conceptually), mark it wrong.
+            // But wait, if they picked "on" and correct is "On", isOptCorrect is true.
+            // So we strictly want: 
+            // - Highlight the correct option (always)
+            // - Highlight the user's wrong choice (if they made one)
+
+            if (isOptUser && !isCorrect) btn.classList.add('wrong');
         } else {
             btn.onclick = () => {
                 Store.submitAnswer(lessonId, question.id, opt);
@@ -168,7 +180,7 @@ function ResultView(lesson) {
     const answers = Store.state.answers[lesson.id] || {};
 
     lesson.sentences.forEach(s => {
-        if (answers[s.id] === s.correct) correct++;
+        if (answers[s.id] && answers[s.id].trim().toLowerCase() === s.correct.trim().toLowerCase()) correct++;
     });
 
     const container = document.createElement('div');
