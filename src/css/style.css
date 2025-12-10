@@ -328,10 +328,16 @@ body {
   border-color: #10b981;
 }
 
-.opt-btn.wrong {
+.gap-box.correct {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.gap-box.wrong {
   background: #ef4444;
   color: white;
-  border-color: #ef4444;
+  /* animation: shake 0.5s; optional enhancement */
 }
 
 /* Footer Actions */

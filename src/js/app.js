@@ -142,8 +142,13 @@ function QuestionView(lessonId) {
     // Determine progress within the sentence
     let firstUnansweredIndex = 0;
     while (firstUnansweredIndex < gaps.length) {
-        const gId = gaps[firstUnansweredIndex].id;
-        if (!Store.state.answers[lessonId]?.[gId]) break;
+        const g = gaps[firstUnansweredIndex];
+        const ans = Store.state.answers[lessonId]?.[g.id];
+        const isCorrect = ans && (ans.trim().toLowerCase() === g.correct.trim().toLowerCase());
+
+        // Stop if no answer OR if answer is wrong (so user can retry and see explanation)
+        if (!ans || !isCorrect) break;
+
         firstUnansweredIndex++;
     }
 
@@ -152,6 +157,10 @@ function QuestionView(lessonId) {
     // Active gap is the first unanswered one, unless sentence is done
     const activeGapIndex = isSentenceComplete ? -1 : firstUnansweredIndex;
     const activeGap = activeGapIndex >= 0 ? gaps[activeGapIndex] : null;
+
+    // Check if the ACTIVE gap has been attempted (to separate "fresh" vs "wrong" state)
+    const activeGapAns = activeGap ? Store.state.answers[lessonId]?.[activeGap.id] : null;
+    const isErrorState = !!activeGapAns; // It's active but has an answer, so must be wrong
 
     const container = document.createElement('div');
     container.className = 'question-container';
@@ -180,6 +189,14 @@ function QuestionView(lessonId) {
         }
     });
 
+    // Explanation should be visible if:
+    // 1. Sentence is fully complete (summary/review)
+    // 2. OR The active gap has been attempted (isErrorState) -> Show explanation for correction
+    const showExplanation = isSentenceComplete || (activeGap && isErrorState);
+    const explanationText = isSentenceComplete
+        ? (question.explanation || (gaps[0]?.explanation) || '')
+        : (activeGap?.explanation || '');
+
     container.innerHTML = `
         <div class="q-info">
             <span>${index + 1} / ${lesson.sentences.length}</span>
@@ -191,8 +208,8 @@ function QuestionView(lessonId) {
             <div class="q-text">
                 ${sentenceHtml}
             </div>
-             <div class="explanation ${isSentenceComplete ? 'visible' : ''}">
-                ${isSentenceComplete ? question.explanation : ''}
+             <div class="explanation ${showExplanation ? 'visible' : ''}">
+                ${explanationText}
             </div>
         </div>
 

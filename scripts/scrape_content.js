@@ -58,18 +58,62 @@ const EXERCISE_URLS = [
 function generateExplanation(preposition, sentence) {
     const p = preposition.toLowerCase().trim();
     const s = sentence.toLowerCase();
+
+    // AT
     if (p === 'at') {
-        if (s.includes('time') || s.includes('night')) return "Use 'at' for specific times.";
+        if (s.match(/\b(time|night|midnight|noon|dawn|dusk|sunset|sunrise|moment|present|weekend|christmas)\b/)) return "Use 'at' for specific points in time.";
+        if (s.match(/\b(home|school|work|university|college|station|airport|party|concert|door|desk|table|bottom|top|end)\b/)) return "Use 'at' for specific locations or points.";
         return "Use 'at' for specific points in time or place.";
     }
+
+    // ON
     if (p === 'on') {
-        if (s.includes('day') || s.includes('date')) return "Use 'on' for days and dates.";
-        return "Use 'on' for days, dates, or surfaces.";
+        if (s.match(/\b(monday|tuesday|wednesday|thursday|friday|saturay|sunday|day|date|birthday|holiday)\b/)) return "Use 'on' for days and specific dates.";
+        if (s.match(/\b(floor|wall|ceiling|shelf|table|desk|page|screen|map|menu|list|left|right)\b/)) return "Use 'on' for surfaces or relative directions.";
+        if (s.match(/\b(bus|train|plane|ship|boat|bike|motorcycle|horse)\b/)) return "Use 'on' for public transport or single-person vehicles.";
+        return "Use 'on' for days, dates, surfaces, or public transport.";
     }
+
+    // IN
     if (p === 'in') {
+        if (s.match(/\b(january|february|march|april|may|june|july|august|september|october|november|december)\b/)) return "Use 'in' for months.";
+        if (s.match(/\b(morning|afternoon|evening)\b/)) return "Use 'in' for parts of the day.";
+        if (s.match(/\b(spring|summer|autumn|winter|season)\b/)) return "Use 'in' for seasons.";
         if (s.match(/\d{4}/)) return "Use 'in' for years.";
-        return "Use 'in' for enclosed spaces or longer periods of time.";
+        if (s.match(/\b(century|past|future)\b/)) return "Use 'in' for long periods of time.";
+        if (s.match(/\b(room|office|house|car|taxi|garden|park|forest|water|sea|river|ocean|world|city|town|village|country|london|paris|new york)\b/)) return "Use 'in' for enclosed spaces, cities, or countries.";
+        return "Use 'in' for enclosed spaces, cities, countries, or longer periods of time.";
     }
+
+    // TO
+    if (p === 'to') {
+        if (s.match(/\b(go|went|going|gone|walk|drive|fly|travel|move|come|came)\b/)) return "Use 'to' for movement or direction towards a place.";
+        return "Use 'to' for movement or direction.";
+    }
+
+    // FOR
+    if (p === 'for') {
+        if (s.match(/\b(day|week|month|year|hour|minute|second|ages|while)\b/)) return "Use 'for' to indicate a duration of time.";
+        return "Use 'for' to indicate usage, duration, or purpose.";
+    }
+
+    // SINCE
+    if (p === 'since') {
+        return "Use 'since' to refer to a specific point in time where an action started.";
+    }
+
+    // BY
+    if (p === 'by') {
+        if (s.match(/\b(car|taxi|bus|train|plane|boat)\b/)) return "Use 'by' for modes of transport (general).";
+        if (s.match(/\b(time|tomorrow|next|end)\b/)) return "Use 'by' to mean 'not later than'.";
+        return "Use 'by' to mean near, next to, or via.";
+    }
+
+    // ABOUT
+    if (p === 'about') {
+        return "Use 'about' to mean 'concerning' or 'approximately'.";
+    }
+
     return `The correct preposition here is '${preposition}'.`;
 }
 
@@ -218,6 +262,7 @@ async function scrapeLesson(url) {
                         id: gap.id,
                         correct: correct,
                         options: generateOptions(correct)
+                        // explanation generated later
                     });
 
                     // Replace with a placeholder we can split by later
@@ -238,12 +283,16 @@ async function scrapeLesson(url) {
             // Remove initial numbering like "1. " if it exists (common in LI)
             text = text.replace(/^(\d+\.)\s*/, '');
 
+            // Update explanations now that we have the text
+            gapsData.forEach(g => {
+                g.explanation = generateExplanation(g.correct, text);
+            });
+
             sentences.push({
                 id: globalSentenceIdCounter++, // Internal ID for the sentence object
                 // We keep original gap IDs in the gaps array for reference/debugging if needed
                 text: text,
-                gaps: gapsData,
-                explanation: gapsData.length > 0 ? generateExplanation(gapsData[0].correct, text) : ""
+                gaps: gapsData
             });
         };
 
