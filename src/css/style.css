@@ -157,7 +157,8 @@ body {
 }
 
 #top-bar {
-  height: 80px;
+  min-height: 60px;
+  height: auto;
   background: #1e293b;
   /* Dark header usually looks good or white */
   background: var(--surface);
@@ -174,9 +175,18 @@ body {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+#lesson-header-info {
+  flex: 1;
+  overflow: hidden;
+}
+
 #lesson-header-info h2 {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #global-stats {

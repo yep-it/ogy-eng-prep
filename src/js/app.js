@@ -105,21 +105,34 @@ function renderSidebar() {
         const answers = Store.state.answers[lesson.id] || {};
         const answeredCount = Object.keys(answers).length;
 
-        // Calculate total gaps
+        // Calculate total gaps and extract unique prepositions
         let total = 0;
+        const prepositionsSet = new Set();
         lesson.sentences.forEach(s => {
             if (s.gaps) {
                 total += s.gaps.length;
+                s.gaps.forEach(g => {
+                    if (g.correct) {
+                        prepositionsSet.add(g.correct.toLowerCase());
+                    }
+                });
             } else {
                 total += 1; // Legacy fallback
+                if (s.correct) {
+                    prepositionsSet.add(s.correct.toLowerCase());
+                }
             }
         });
+
+        // Create display name from unique prepositions
+        const prepositionsList = Array.from(prepositionsSet).sort().join(', ').toUpperCase();
+        const displayName = prepositionsList || lesson.title;
 
         const progressPct = total === 0 ? 0 : Math.round((answeredCount / total) * 100);
 
         item.innerHTML = `
             <div class="lesson-info">
-                <h4>${lesson.title}</h4>
+                <h4 title="${lesson.title}">${displayName}</h4>
                 <div class="lesson-meta">
                     <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span> 
                     <span>${progressPct}% (${answeredCount}/${total})</span>
@@ -154,8 +167,18 @@ function QuestionView(lessonId) {
         Store.startLesson(lessonId);
     }
 
-    // Update Header
-    topBarTitle.innerHTML = `<h2>${lesson.title}</h2>`;
+    // Update Header - extract unique prepositions for display name
+    const prepositionsSet = new Set();
+    lesson.sentences.forEach(s => {
+        const gaps = s.gaps || [{ correct: s.correct }];
+        gaps.forEach(g => {
+            if (g.correct) {
+                prepositionsSet.add(g.correct.toLowerCase());
+            }
+        });
+    });
+    const headerDisplayName = Array.from(prepositionsSet).sort().join(', ').toUpperCase() || lesson.title;
+    topBarTitle.innerHTML = `<h2 title="${lesson.title}">${headerDisplayName}</h2>`;
 
     const index = Store.state.currentQuestionIndex;
     if (index >= lesson.sentences.length) {
