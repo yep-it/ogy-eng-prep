@@ -83,21 +83,10 @@ function renderSidebar() {
                     <span>${progressPct}% (${answeredCount}/${total})</span>
                 </div>
             </div>
-            ${answeredCount > 0 ? `<button class="btn-reset" title="Reset Progress">×</button>` : ''}
         `;
 
         // Click on item to navigate
         item.onclick = (e) => {
-            // If we clicked the reset button, don't navigate
-            if (e.target.classList.contains('btn-reset')) {
-                e.stopPropagation();
-                if (confirm('Reset progress for this lesson?')) {
-                    Store.state.answers[lesson.id] = {};
-                    Store.persist(); // specific to store implementation, but usually needed
-                    render(); // Re-render to update UI
-                }
-                return;
-            }
             Router.navigate(`#/lesson/${lesson.id}`);
         };
         sidebarList.appendChild(item);

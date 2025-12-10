@@ -120,24 +120,7 @@ body {
   opacity: 0.8;
 }
 
-.btn-reset {
-  background: transparent;
-  border: none;
-  font-size: 1.5rem;
-  color: inherit;
-  opacity: 0.5;
-  cursor: pointer;
-  padding: 0 0.5rem;
-  margin-left: 0.5rem;
-  line-height: 1;
-  transition: all 0.2s;
-}
 
-.btn-reset:hover {
-  opacity: 1;
-  color: #ef4444;
-  transform: scale(1.1);
-}
 
 /* Main Content */
 #main-content {
