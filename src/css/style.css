@@ -181,8 +181,7 @@ body {
   padding: 2rem;
   overflow-y: auto;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;
 }
 
 .question-container {

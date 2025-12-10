@@ -296,16 +296,15 @@ function ResultView(lesson) {
             </div>
             <p>You got ${correctGaps} out of ${totalGaps} correct.</p>
         </div>
-        </div>
-        
-        <div id="stats-container" style="text-align: left; margin: 2rem 0; width: 100%;">
-            <!-- Stats injected here -->
-        </div>
 
         <div class="action-footer" style="justify-content: center;">
             <button id="retry-btn" class="btn-secondary">Retry Lesson</button>
             ${!isComplete ? `<button id="continue-btn" class="btn-primary">Continue</button>` : ''}
             ${isComplete ? `<button id="next-btn" class="btn-primary">Next Lesson</button>` : ''}
+        </div>
+        
+        <div id="stats-container" style="text-align: left; margin: 2rem 0; width: 100%;">
+            <!-- Stats injected here -->
         </div>
     `;
 
