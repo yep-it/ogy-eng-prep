@@ -199,8 +199,16 @@ function QuestionView(lessonId) {
 
     container.innerHTML = `
         <div class="q-info">
-            <span>${index + 1} / ${lesson.sentences.length}</span>
             <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span>
+            <span>${index + 1} / ${lesson.sentences.length}</span>
+        </div>
+
+        <!-- Navigation Arrows -->
+        <div class="nav-arrow left ${index === 0 ? 'disabled' : ''}" id="prev-btn" title="Previous (Left Arrow)">
+            &#8592;
+        </div>
+        <div class="nav-arrow right" id="next-nav-btn" title="Next (Right Arrow)">
+            &#8594;
         </div>
 
         <div class="q-box">
@@ -225,10 +233,11 @@ function QuestionView(lessonId) {
     // Render Options for the ACTIVE gap
     const optContainer = container.querySelector('#options-container');
     if (activeGap) {
-        activeGap.options.forEach(opt => {
+        activeGap.options.forEach((opt, i) => {
             const btn = document.createElement('button');
             btn.className = 'opt-btn';
-            btn.textContent = opt;
+            btn.innerHTML = `${opt} <span class="key-hint">(${i + 1})</span>`;
+            btn.dataset.key = i + 1; // Mark for keyboard selection
 
             // Should we show incorrect state immediately if they pick wrong?
             // Yes, standard behavior.
@@ -244,6 +253,13 @@ function QuestionView(lessonId) {
     if (nextBtn) {
         nextBtn.onclick = () => Store.nextQuestion();
     }
+
+    // Navigation Arrow Handlers
+    const prevBtn = container.querySelector('#prev-btn');
+    if (prevBtn) prevBtn.onclick = () => Store.prevQuestion();
+
+    const nextNavBtn = container.querySelector('#next-nav-btn');
+    if (nextNavBtn) nextNavBtn.onclick = () => Store.nextQuestion();
 
     return container;
 }
@@ -369,6 +385,46 @@ function render() {
 }
 
 async function init() {
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+        // Only valid if in lesson view
+        if (!window.location.hash.startsWith('#/lesson/')) return;
+
+        // 1, 2, 3 for variants selection
+        if (['1', '2', '3'].includes(e.key)) {
+            const btns = document.querySelectorAll('.opt-btn');
+            const target = Array.from(btns).find(b => b.dataset.key === e.key);
+            if (target) {
+                target.click();
+                // Add a small visual feedback or just trust the click handler
+            }
+        }
+
+        // Enter for "Next" or "Continue"
+        if (e.key === 'Enter') {
+            const nextBtn = document.getElementById('next-btn'); // Next Exercise
+            const continueBtn = document.getElementById('continue-btn'); // Continue from Result
+
+            // Note: In ResultView, next lesson btn id is 'next-btn', in QuestionView next exercise is 'next-btn'.
+            // Priority: visible button.
+            if (nextBtn && nextBtn.offsetParent !== null) nextBtn.click();
+            else if (continueBtn && continueBtn.offsetParent !== null) continueBtn.click();
+        }
+
+        // Arrows for navigation
+        if (e.key === 'ArrowLeft') {
+            Store.prevQuestion();
+        }
+        if (e.key === 'ArrowRight') {
+            const nextBtn = document.getElementById('next-btn');
+            // If the "Next Exercise" button is visible (meaning question completed), Enter is preferred for that flow.
+            // But ArrowRight should also just move generally if desired. 
+            // The user wanted "move back and force... using right and left".
+            // So we just call Store.nextQuestion();
+            Store.nextQuestion();
+        }
+    });
+
     await Store.init();
 
     Store.subscribe(() => {

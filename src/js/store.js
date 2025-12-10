@@ -94,8 +94,17 @@ export const Store = {
     },
 
     nextQuestion() {
-        this.state.currentQuestionIndex++;
-        this.notify();
+        if (this.state.currentQuestionIndex < this.state.lessons.find(l => l.id === this.state.currentLessonId).sentences.length) {
+            this.state.currentQuestionIndex++;
+            this.notify();
+        }
+    },
+
+    prevQuestion() {
+        if (this.state.currentQuestionIndex > 0) {
+            this.state.currentQuestionIndex--;
+            this.notify();
+        }
     },
 
     completeLesson(lessonId, score) {

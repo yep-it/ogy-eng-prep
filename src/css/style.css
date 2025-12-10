@@ -388,3 +388,68 @@ body {
 .explanation.visible {
   opacity: 1;
 }
+
+/* Navigation Arrows */
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 1.2rem;
+  transition: all 0.2s;
+  user-select: none;
+  z-index: 10;
+}
+
+.nav-arrow:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+.nav-arrow.left {
+  left: -60px;
+}
+
+.nav-arrow.right {
+  right: -60px;
+}
+
+.nav-arrow.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Keyboard Hints */
+.key-hint {
+  display: inline-block;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  margin-left: 0.5rem;
+  font-weight: 400;
+  vertical-align: middle;
+}
+
+/* Responsive adjustment for arrows */
+@media (max-width: 900px) {
+  .nav-arrow.left {
+    left: 10px;
+    background: rgba(255,255,255,0.8);
+  }
+  .nav-arrow.right {
+    right: 10px;
+    background: rgba(255,255,255,0.8);
+  }
+  .question-container {
+    padding: 0 40px; /* Make space for arrows */
+  }
+}
