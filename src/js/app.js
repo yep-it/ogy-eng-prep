@@ -62,18 +62,42 @@ function renderSidebar() {
 
         const answers = Store.state.answers[lesson.id] || {};
         const answeredCount = Object.keys(answers).length;
-        const total = lesson.sentences.length;
-        const progressPct = Math.round((answeredCount / total) * 100);
+
+        // Calculate total gaps
+        let total = 0;
+        lesson.sentences.forEach(s => {
+            if (s.gaps) {
+                total += s.gaps.length;
+            } else {
+                total += 1; // Legacy fallback
+            }
+        });
+
+        const progressPct = total === 0 ? 0 : Math.round((answeredCount / total) * 100);
 
         item.innerHTML = `
-            <h4>${lesson.title}</h4>
-            <div class="lesson-meta">
-                <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span> 
-                <span>${progressPct}% (${answeredCount}/${total})</span>
+            <div class="lesson-info">
+                <h4>${lesson.title}</h4>
+                <div class="lesson-meta">
+                    <span class="tag tag-${(lesson.level || 'elementary').toLowerCase()}">${lesson.level || 'Elementary'}</span> 
+                    <span>${progressPct}% (${answeredCount}/${total})</span>
+                </div>
             </div>
+            ${answeredCount > 0 ? `<button class="btn-reset" title="Reset Progress">×</button>` : ''}
         `;
 
-        item.onclick = () => {
+        // Click on item to navigate
+        item.onclick = (e) => {
+            // If we clicked the reset button, don't navigate
+            if (e.target.classList.contains('btn-reset')) {
+                e.stopPropagation();
+                if (confirm('Reset progress for this lesson?')) {
+                    Store.state.answers[lesson.id] = {};
+                    Store.persist(); // specific to store implementation, but usually needed
+                    render(); // Re-render to update UI
+                }
+                return;
+            }
             Router.navigate(`#/lesson/${lesson.id}`);
         };
         sidebarList.appendChild(item);

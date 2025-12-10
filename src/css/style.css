@@ -88,6 +88,9 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   border: 1px solid transparent;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .lesson-item:hover {
@@ -98,6 +101,10 @@ body {
   background: var(--active-lesson-bg);
   color: var(--active-lesson-text);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.lesson-info {
+  flex: 1;
 }
 
 .lesson-item h4 {
@@ -111,6 +118,25 @@ body {
   justify-content: space-between;
   font-size: 0.75rem;
   opacity: 0.8;
+}
+
+.btn-reset {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: inherit;
+  opacity: 0.5;
+  cursor: pointer;
+  padding: 0 0.5rem;
+  margin-left: 0.5rem;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.btn-reset:hover {
+  opacity: 1;
+  color: #ef4444; 
+  transform: scale(1.1);
 }
 
 /* Main Content */
