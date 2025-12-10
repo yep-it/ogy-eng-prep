@@ -20,11 +20,24 @@ function updateGlobalStats() {
         const lesson = Store.getLesson(lId);
         if (!lesson) return;
 
+        // Create a lookup for all gaps in the lesson
+        const gapMap = new Map();
+        lesson.sentences.forEach(s => {
+            if (s.gaps) {
+                s.gaps.forEach(g => gapMap.set(g.id, g));
+            } else {
+                // Fallback for legacy data if any
+                gapMap.set(s.id, { id: s.id, correct: s.correct });
+            }
+        });
+
         Object.keys(lessonAnswers).forEach(qId => {
             const userAns = lessonAnswers[qId];
-            const q = lesson.sentences.find(s => s.id == qId);
-            if (q) {
-                if (userAns.trim().toLowerCase() === q.correct.trim().toLowerCase()) correct++;
+            // ID keys in object are strings, convert to int for lookup if needed
+            const gap = gapMap.get(parseInt(qId)) || gapMap.get(qId);
+
+            if (gap) {
+                if (userAns.trim().toLowerCase() === gap.correct.trim().toLowerCase()) correct++;
                 else mistakes++;
             }
         });
@@ -95,19 +108,53 @@ function QuestionView(lessonId) {
     }
 
     const question = lesson.sentences[index];
-    const userAnswer = Store.state.answers[lessonId]?.[question.id];
-    const isAnswered = !!userAnswer;
+    // Support new 'gaps' format or legacy single-gap format
+    const gaps = question.gaps || [{
+        id: question.id,
+        correct: question.correct,
+        options: question.options
+    }];
 
-    // Case-insensitive check
-    const isCorrect = isAnswered && (userAnswer.trim().toLowerCase() === question.correct.trim().toLowerCase());
+    // Determine progress within the sentence
+    let firstUnansweredIndex = 0;
+    while (firstUnansweredIndex < gaps.length) {
+        const gId = gaps[firstUnansweredIndex].id;
+        if (!Store.state.answers[lessonId]?.[gId]) break;
+        firstUnansweredIndex++;
+    }
 
-    // Split sentence
-    const parts = (question.text || "").split('____');
-    const prePart = parts[0];
-    const postPart = parts[1] || '.';
+    const isSentenceComplete = firstUnansweredIndex >= gaps.length;
+
+    // Active gap is the first unanswered one, unless sentence is done
+    const activeGapIndex = isSentenceComplete ? -1 : firstUnansweredIndex;
+    const activeGap = activeGapIndex >= 0 ? gaps[activeGapIndex] : null;
 
     const container = document.createElement('div');
     container.className = 'question-container';
+
+    // Construct the sentence HTML with interspersed gaps
+    const parts = (question.text || "").split('____');
+    let sentenceHtml = '';
+
+    parts.forEach((part, i) => {
+        sentenceHtml += `<span>${part}</span>`;
+        if (i < gaps.length) {
+            const gap = gaps[i];
+            const ans = Store.state.answers[lessonId]?.[gap.id];
+            const filled = !!ans;
+            const isCorrect = filled && (ans.trim().toLowerCase() === gap.correct.trim().toLowerCase());
+            const isActive = (i === activeGapIndex);
+
+            let classes = 'gap-box';
+            if (!filled) classes += ' empty';
+            if (isActive) classes += ' active-gap';
+            if (filled) classes += isCorrect ? ' correct' : ' wrong';
+
+            sentenceHtml += `<div class="${classes}" data-index="${i}">
+                ${filled ? ans : (isActive ? '?' : '')}
+            </div>`;
+        }
+    });
 
     container.innerHTML = `
         <div class="q-info">
@@ -118,14 +165,10 @@ function QuestionView(lessonId) {
         <div class="q-box">
             <div class="q-instruction">COMPLETE THE SENTENCE:</div>
             <div class="q-text">
-                ${prePart} 
-                <div class="gap-box ${isAnswered ? '' : 'empty'}">
-                    ${isAnswered ? userAnswer : ''}
-                </div>
-                ${postPart}
+                ${sentenceHtml}
             </div>
-             <div class="explanation ${isAnswered ? 'visible' : ''}">
-                ${isAnswered ? (isCorrect ? "Correct! " : "Incorrect. ") + question.explanation : ''}
+             <div class="explanation ${isSentenceComplete ? 'visible' : ''}">
+                ${isSentenceComplete ? question.explanation : ''}
             </div>
         </div>
 
@@ -134,37 +177,27 @@ function QuestionView(lessonId) {
         </div>
 
         <div class="action-footer">
-            ${isAnswered ? `<button id="next-btn" class="btn-primary">NEXT EXERCISE</button>` : ''}
+            ${isSentenceComplete ? `<button id="next-btn" class="btn-primary">NEXT EXERCISE</button>` : ''}
         </div>
     `;
 
+    // Render Options for the ACTIVE gap
     const optContainer = container.querySelector('#options-container');
-    question.options.forEach(opt => {
-        const btn = document.createElement('button');
-        btn.className = 'opt-btn';
-        btn.textContent = opt;
+    if (activeGap) {
+        activeGap.options.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'opt-btn';
+            btn.textContent = opt;
 
-        if (isAnswered) {
-            btn.disabled = true;
+            // Should we show incorrect state immediately if they pick wrong?
+            // Yes, standard behavior.
 
-            const isOptCorrect = opt.trim().toLowerCase() === question.correct.trim().toLowerCase();
-            const isOptUser = opt === userAnswer; // Keep user selection exact for visual feedback of what they clicked? Or normalize? Let's check exact match for what they clicked.
-
-            if (isOptCorrect) btn.classList.add('correct');
-            // If this option is what the user picked, and it wasn't the correct one (conceptually), mark it wrong.
-            // But wait, if they picked "on" and correct is "On", isOptCorrect is true.
-            // So we strictly want: 
-            // - Highlight the correct option (always)
-            // - Highlight the user's wrong choice (if they made one)
-
-            if (isOptUser && !isCorrect) btn.classList.add('wrong');
-        } else {
             btn.onclick = () => {
-                Store.submitAnswer(lessonId, question.id, opt);
+                Store.submitAnswer(lessonId, activeGap.id, opt);
             };
-        }
-        optContainer.appendChild(btn);
-    });
+            optContainer.appendChild(btn);
+        });
+    }
 
     const nextBtn = container.querySelector('#next-btn');
     if (nextBtn) {
@@ -175,12 +208,19 @@ function QuestionView(lessonId) {
 }
 
 function ResultView(lesson) {
-    const total = lesson.sentences.length;
-    let correct = 0;
+    let totalGaps = 0;
+    let correctGaps = 0;
     const answers = Store.state.answers[lesson.id] || {};
 
     lesson.sentences.forEach(s => {
-        if (answers[s.id] && answers[s.id].trim().toLowerCase() === s.correct.trim().toLowerCase()) correct++;
+        const gaps = s.gaps || [{ id: s.id, correct: s.correct }];
+        gaps.forEach(g => {
+            totalGaps++;
+            const userAns = answers[g.id];
+            if (userAns && userAns.trim().toLowerCase() === g.correct.trim().toLowerCase()) {
+                correctGaps++;
+            }
+        });
     });
 
     const container = document.createElement('div');
@@ -191,9 +231,9 @@ function ResultView(lesson) {
         <div class="q-box">
             <h2>Lesson Completed!</h2>
             <div style="font-size: 3rem; font-weight: 700; color: var(--primary); margin: 1rem 0;">
-                ${Math.round((correct / total) * 100)}%
+                ${totalGaps === 0 ? 0 : Math.round((correctGaps / totalGaps) * 100)}%
             </div>
-            <p>You got ${correct} out of ${total} correct.</p>
+            <p>You got ${correctGaps} out of ${totalGaps} correct.</p>
         </div>
         <div class="action-footer" style="justify-content: center;">
             <button id="retry-btn" class="btn-secondary">Retry Lesson</button>
