@@ -9,6 +9,7 @@ export const Store = {
         currentLessonId: null,
         currentQuestionIndex: 0,
         answers: {}, // { lessonId: { questionId: 'userAnswer' } }
+        stats: {},   // { lessonId: { gapId: { totalWrong: 0, mistakes: { 'wrongOpt': count } } } }
         results: {}, // { lessonId: { score: 0, completed: false } }
         darkMode: localStorage.getItem('theme') === 'dark'
     },
@@ -28,16 +29,18 @@ export const Store = {
     loadProgress() {
         const saved = localStorage.getItem('prep_progress');
         if (saved) {
-            const { answers, results } = JSON.parse(saved);
+            const { answers, results, stats } = JSON.parse(saved);
             this.state.answers = answers || {};
             this.state.results = results || {};
+            this.state.stats = stats || {};
         }
     },
 
     saveProgress() {
         localStorage.setItem('prep_progress', JSON.stringify({
             answers: this.state.answers,
-            results: this.state.results
+            results: this.state.results,
+            stats: this.state.stats
         }));
     },
 
@@ -89,6 +92,39 @@ export const Store = {
             this.state.answers[lessonId] = {};
         }
         this.state.answers[lessonId][questionId] = answer;
+
+        // Check for correctness to update stats
+        const lesson = this.getLesson(lessonId);
+        if (lesson) {
+            let gap = null;
+            // Find gap across all sentences
+            for (const s of lesson.sentences) {
+                if (s.gaps) {
+                    gap = s.gaps.find(g => g.id == questionId);
+                } else if (s.id == questionId) {
+                    gap = { id: s.id, correct: s.correct };
+                }
+                if (gap) break;
+            }
+
+            if (gap) {
+                const isCorrect = answer.trim().toLowerCase() === gap.correct.trim().toLowerCase();
+                if (!isCorrect) {
+                    // Update stats
+                    if (!this.state.stats[lessonId]) {
+                        this.state.stats[lessonId] = {};
+                    }
+                    if (!this.state.stats[lessonId][questionId]) {
+                        this.state.stats[lessonId][questionId] = { totalWrong: 0, mistakes: {} };
+                    }
+
+                    const stat = this.state.stats[lessonId][questionId];
+                    stat.totalWrong++;
+                    stat.mistakes[answer] = (stat.mistakes[answer] || 0) + 1;
+                }
+            }
+        }
+
         this.saveProgress();
         this.notify();
     },

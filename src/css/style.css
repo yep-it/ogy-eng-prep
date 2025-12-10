@@ -457,3 +457,80 @@ body {
     /* Make space for arrows */
   }
 }
+
+/* Stats UI in Result View */
+.stat-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.stat-sentence {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-color);
+}
+
+.stat-gap-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+  font-size: 0.9rem;
+}
+
+.badg-gap-idx {
+  background: var(--bg-secondary, #f1f5f9);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.stat-correct {
+  color: var(--success-color, #10b981);
+}
+
+.stat-wrong-list {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mistake-tag {
+  background: rgba(239, 68, 68, 0.1);
+  /* Red tint */
+  color: #ef4444;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.stats-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 5px;
+  margin-top: 1rem;
+}
+
+.text-muted.small {
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+/* Scrollbar for stats list */
+.stats-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stats-list::-webkit-scrollbar-thumb {
+  background-color: var(--border-color, #e2e8f0);
+  border-radius: 3px;
+}

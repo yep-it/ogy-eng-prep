@@ -307,12 +307,77 @@ function ResultView(lesson) {
             </div>
             <p>You got ${correctGaps} out of ${totalGaps} correct.</p>
         </div>
+        </div>
+        
+        <div id="stats-container" style="text-align: left; margin: 2rem 0; width: 100%;">
+            <!-- Stats injected here -->
+        </div>
+
         <div class="action-footer" style="justify-content: center;">
             <button id="retry-btn" class="btn-secondary">Retry Lesson</button>
             ${!isComplete ? `<button id="continue-btn" class="btn-primary">Continue</button>` : ''}
             ${isComplete ? `<button id="next-btn" class="btn-primary">Next Lesson</button>` : ''}
         </div>
     `;
+
+    // Render Detailed Stats
+    const statsContainer = container.querySelector('#stats-container');
+    const lessonStats = Store.state.stats[lesson.id] || {};
+    let hasMistakesOfType = false;
+
+    // Check if we have any relevant stats to show
+    // We want to show stats for all gaps that have > 0 mistakes in history
+    let statsHtml = '';
+
+    lesson.sentences.forEach((s, sIndex) => {
+        const gaps = s.gaps || [{ id: s.id, correct: s.correct }];
+        let sentenceHasMistakes = false;
+        let gapDetails = [];
+
+        gaps.forEach((g, gIndex) => {
+            const stat = lessonStats[g.id];
+            if (stat && stat.totalWrong > 0) {
+                sentenceHasMistakes = true;
+                hasMistakesOfType = true; // global flag
+
+                // Format mistakes list: "on (2), at (1)"
+                const mistakesList = Object.entries(stat.mistakes)
+                    .map(([opt, count]) => `<span class="mistake-tag">${opt} <small>x${count}</small></span>`)
+                    .join(', ');
+
+                gapDetails.push(`
+                    <div class="stat-gap-row">
+                        <span class="badg-gap-idx">Gap ${gIndex + 1}</span>
+                        <span class="stat-correct">Correct: <strong>${g.correct}</strong></span>
+                        <div class="stat-wrong-list">
+                            Mistakes: ${mistakesList}
+                        </div>
+                    </div>
+                `);
+            }
+        });
+
+        if (sentenceHasMistakes) {
+            statsHtml += `
+                <div class="stat-item">
+                    <div class="stat-sentence">${s.text}</div>
+                    ${gapDetails.join('')}
+                </div>
+            `;
+        }
+    });
+
+    if (hasMistakesOfType) {
+        statsContainer.innerHTML = `
+            <h3>Your Struggle History</h3>
+            <p class="text-muted small">Cumulative mistakes for this lesson</p>
+            <div class="stats-list">
+                ${statsHtml}
+            </div>
+        `;
+    } else {
+        statsContainer.innerHTML = `<p class="text-muted text-center">Perfect history for this lesson! No cached mistakes.</p>`;
+    }
 
     container.querySelector('#retry-btn').onclick = () => {
         // Clear answers for this lesson
