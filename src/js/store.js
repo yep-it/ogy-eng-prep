@@ -65,7 +65,22 @@ export const Store = {
 
     startLesson(id) {
         this.state.currentLessonId = id;
-        this.state.currentQuestionIndex = 0;
+        // Check if we have progress
+        const answers = this.state.answers[id] || {};
+        const hasProgress = Object.keys(answers).length > 0;
+
+        if (hasProgress) {
+            // Jump to end to show ResultView (which will handle Continue/Retry logic)
+            const lesson = this.getLesson(id);
+            if (lesson) {
+                this.state.currentQuestionIndex = lesson.sentences.length;
+            } else {
+                this.state.currentQuestionIndex = 0;
+            }
+        } else {
+            this.state.currentQuestionIndex = 0;
+        }
+
         this.notify();
     },
 

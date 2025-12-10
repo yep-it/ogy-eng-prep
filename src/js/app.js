@@ -253,16 +253,31 @@ function ResultView(lesson) {
     let correctGaps = 0;
     const answers = Store.state.answers[lesson.id] || {};
 
-    lesson.sentences.forEach(s => {
+    let firstUnfinishedIndex = -1;
+
+    lesson.sentences.forEach((s, sIndex) => {
         const gaps = s.gaps || [{ id: s.id, correct: s.correct }];
+        let sentenceComplete = true;
+
         gaps.forEach(g => {
             totalGaps++;
             const userAns = answers[g.id];
             if (userAns && userAns.trim().toLowerCase() === g.correct.trim().toLowerCase()) {
                 correctGaps++;
+            } else {
+                sentenceComplete = false;
             }
         });
+
+        if (!sentenceComplete && firstUnfinishedIndex === -1) {
+            firstUnfinishedIndex = sIndex;
+        }
     });
+
+    // If completely correct, totalGaps match correctGaps
+    // (Wait, if totalGaps is 0, handle that edge case, though lessons usually have content)
+    const isComplete = totalGaps > 0 && totalGaps === correctGaps;
+    const progressPct = totalGaps === 0 ? 0 : Math.round((correctGaps / totalGaps) * 100);
 
     const container = document.createElement('div');
     container.className = 'question-container';
@@ -270,28 +285,59 @@ function ResultView(lesson) {
 
     container.innerHTML = `
         <div class="q-box">
-            <h2>Lesson Completed!</h2>
+            <h2>${isComplete ? 'Lesson Completed!' : 'Lesson Paused'}</h2>
             <div style="font-size: 3rem; font-weight: 700; color: var(--primary); margin: 1rem 0;">
-                ${totalGaps === 0 ? 0 : Math.round((correctGaps / totalGaps) * 100)}%
+                ${progressPct}%
             </div>
             <p>You got ${correctGaps} out of ${totalGaps} correct.</p>
         </div>
         <div class="action-footer" style="justify-content: center;">
             <button id="retry-btn" class="btn-secondary">Retry Lesson</button>
-            <button id="home-btn" class="btn-primary">Back to Menu</button>
+            ${!isComplete ? `<button id="continue-btn" class="btn-primary">Continue</button>` : ''}
+            ${isComplete ? `<button id="next-btn" class="btn-primary">Next Lesson</button>` : ''}
         </div>
     `;
 
     container.querySelector('#retry-btn').onclick = () => {
+        // Clear answers for this lesson
         Store.state.answers[lesson.id] = {};
+        Store.saveProgress(); // Ensure cleared state is saved
         Store.startLesson(lesson.id);
-        Router.navigate(`#/lesson/${lesson.id}`);
+        // Explicitly navigate to ensure reset (though startLesson sets index 0)
+        // If we are already at #/lesson/id, Router might not re-render if hash doesn't change
+        // But Store.notify() should trigger render.
+        // To be safe, we just let the Store state change trigger the render
     };
 
-    container.querySelector('#home-btn').onclick = () => {
-        Store.state.currentLessonId = null;
-        Router.navigate('#/');
-    };
+    const continueBtn = container.querySelector('#continue-btn');
+    if (continueBtn) {
+        continueBtn.onclick = () => {
+            // Jump to firstUnfinishedIndex
+            if (firstUnfinishedIndex !== -1) {
+                Store.state.currentQuestionIndex = firstUnfinishedIndex;
+                Store.notify();
+            } else {
+                // Fallback if somehow calculated wrong, goes to start
+                Store.state.currentQuestionIndex = 0;
+                Store.notify();
+            }
+        };
+    }
+
+    const nextBtn = container.querySelector('#next-btn');
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            // Find current index
+            const allLessons = Store.state.lessons;
+            const currentIndex = allLessons.findIndex(l => l.id === lesson.id);
+            if (currentIndex !== -1) {
+                // Wrap around
+                const nextIndex = (currentIndex + 1) % allLessons.length;
+                const nextLesson = allLessons[nextIndex];
+                Router.navigate(`#/lesson/${nextLesson.id}`);
+            }
+        };
+    }
 
     return container;
 }
