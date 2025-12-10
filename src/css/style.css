@@ -135,7 +135,7 @@ body {
 
 .btn-reset:hover {
   opacity: 1;
-  color: #ef4444; 
+  color: #ef4444;
   transform: scale(1.1);
 }
 
@@ -205,6 +205,7 @@ body {
 .question-container {
   width: 100%;
   max-width: 800px;
+  position: relative;
 }
 
 /* Question Header info */
@@ -443,13 +444,16 @@ body {
 @media (max-width: 900px) {
   .nav-arrow.left {
     left: 10px;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.8);
   }
+
   .nav-arrow.right {
     right: 10px;
-    background: rgba(255,255,255,0.8);
+    background: rgba(255, 255, 255, 0.8);
   }
+
   .question-container {
-    padding: 0 40px; /* Make space for arrows */
+    padding: 0 40px;
+    /* Make space for arrows */
   }
 }
