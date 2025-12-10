@@ -51,6 +51,48 @@ function updateGlobalStats() {
     statAccuracy.textContent = `${acc}%`;
 }
 
+function updateGlobalProgress() {
+    const progressEl = document.getElementById('mini-progress');
+    if (!progressEl) return;
+
+    let totalSentences = 0;
+    let completedSentences = 0;
+
+    Store.state.lessons.forEach(lesson => {
+        lesson.sentences.forEach(s => {
+            totalSentences++;
+
+            // Check if sentence is completed
+            const gaps = s.gaps || [{ id: s.id, correct: s.correct }];
+            let allCorrect = true;
+
+            gaps.forEach(g => {
+                const ans = Store.state.answers[lesson.id]?.[g.id];
+                if (!ans || ans.trim().toLowerCase() !== g.correct.trim().toLowerCase()) {
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                completedSentences++;
+            }
+        });
+    });
+
+    const percent = totalSentences === 0 ? 0 : Math.round((completedSentences / totalSentences) * 100);
+
+    progressEl.innerHTML = `
+        <div class="global-progress-container">
+            <div class="global-progress-bar">
+                <div class="global-progress-fill" style="width: ${percent}%"></div>
+            </div>
+            <div class="global-progress-text">
+                <strong>${percent}%</strong> <span style="opacity: 0.7">(${completedSentences}/${totalSentences} Finished)</span>
+            </div>
+        </div>
+    `;
+}
+
 // --- Components ---
 
 function renderSidebar() {
@@ -435,6 +477,7 @@ function render() {
 
     renderSidebar();
     updateGlobalStats();
+    updateGlobalProgress();
 }
 
 async function init() {

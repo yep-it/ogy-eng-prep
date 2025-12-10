@@ -56,6 +56,31 @@ body {
   border-bottom: 1px solid var(--border);
 }
 
+.global-progress-container {
+  padding: 0.5rem 0;
+}
+
+.global-progress-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.global-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.3s ease;
+}
+
+.global-progress-text {
+  font-size: 0.8rem;
+  color: var(--text-main);
+  display: flex;
+  justify-content: space-between;
+}
+
 .brand h1 {
   font-size: 1.25rem;
   margin: 0;
