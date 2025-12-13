@@ -247,9 +247,23 @@ function QuestionView(lessonId) {
     // 1. Sentence is fully complete (summary/review)
     // 2. OR The active gap has been attempted (isErrorState) -> Show explanation for correction
     const showExplanation = isSentenceComplete || (activeGap && isErrorState);
-    const explanationText = isSentenceComplete
-        ? (question.explanation || (gaps[0]?.explanation) || '')
-        : (activeGap?.explanation || '');
+
+    // Build explanation text - show ALL gap explanations when sentence is complete
+    let explanationText = '';
+    if (isSentenceComplete) {
+        // Show explanations for all gaps when sentence is done
+        const explanations = gaps
+            .map((g, i) => {
+                const label = gaps.length > 1 ? `<strong>Gap ${i + 1} ('${g.correct.toLowerCase()}'):</strong> ` : '';
+                return `${label}${g.explanation || ''}`;
+            })
+            .filter(e => e.trim())
+            .join('<br><br>');
+        explanationText = explanations;
+    } else {
+        // Show only the active gap's explanation when still answering
+        explanationText = activeGap?.explanation || '';
+    }
 
     container.innerHTML = `
         <div class="q-info">
