@@ -11,6 +11,40 @@ const statCorrect = document.getElementById('stat-correct');
 const statMistakes = document.getElementById('stat-mistakes');
 const statAccuracy = document.getElementById('stat-accuracy');
 
+// Mobile Menu Elements
+const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+// Mobile Menu Functions
+function openSidebar() {
+    sidebar.classList.add('open');
+    sidebarOverlay.classList.add('active');
+    menuToggle.classList.add('active');
+}
+
+function closeSidebar() {
+    sidebar.classList.remove('open');
+    sidebarOverlay.classList.remove('active');
+    menuToggle.classList.remove('active');
+}
+
+function toggleSidebar() {
+    if (sidebar.classList.contains('open')) {
+        closeSidebar();
+    } else {
+        openSidebar();
+    }
+}
+
+// Setup mobile menu event listeners
+if (menuToggle) {
+    menuToggle.addEventListener('click', toggleSidebar);
+}
+if (sidebarOverlay) {
+    sidebarOverlay.addEventListener('click', closeSidebar);
+}
+
 function updateGlobalStats() {
     // Use cumulative stats that track every correct/mistake across all sessions
     const correct = Store.state.globalStats.totalCorrect;
@@ -116,6 +150,7 @@ function renderSidebar() {
         // Click on item to navigate
         item.onclick = (e) => {
             Router.navigate(`#/lesson/${lesson.id}`);
+            closeSidebar(); // Close sidebar on mobile after selection
         };
         sidebarList.appendChild(item);
     });
