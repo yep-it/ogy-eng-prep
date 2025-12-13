@@ -11,6 +11,7 @@ export const Store = {
         answers: {}, // { lessonId: { questionId: 'userAnswer' } }
         stats: {},   // { lessonId: { gapId: { totalWrong: 0, mistakes: { 'wrongOpt': count } } } }
         results: {}, // { lessonId: { score: 0, completed: false } }
+        globalStats: { totalCorrect: 0, totalMistakes: 0 }, // Cumulative stats across all sessions
         darkMode: localStorage.getItem('theme') === 'dark'
     },
 
@@ -29,10 +30,11 @@ export const Store = {
     loadProgress() {
         const saved = localStorage.getItem('prep_progress');
         if (saved) {
-            const { answers, results, stats } = JSON.parse(saved);
+            const { answers, results, stats, globalStats } = JSON.parse(saved);
             this.state.answers = answers || {};
             this.state.results = results || {};
             this.state.stats = stats || {};
+            this.state.globalStats = globalStats || { totalCorrect: 0, totalMistakes: 0 };
         }
     },
 
@@ -40,7 +42,8 @@ export const Store = {
         localStorage.setItem('prep_progress', JSON.stringify({
             answers: this.state.answers,
             results: this.state.results,
-            stats: this.state.stats
+            stats: this.state.stats,
+            globalStats: this.state.globalStats
         }));
     },
 
@@ -109,8 +112,14 @@ export const Store = {
 
             if (gap) {
                 const isCorrect = answer.trim().toLowerCase() === gap.correct.trim().toLowerCase();
-                if (!isCorrect) {
-                    // Update stats
+                if (isCorrect) {
+                    // Increment cumulative correct count
+                    this.state.globalStats.totalCorrect++;
+                } else {
+                    // Increment cumulative mistakes count
+                    this.state.globalStats.totalMistakes++;
+
+                    // Update per-gap stats for struggle history
                     if (!this.state.stats[lessonId]) {
                         this.state.stats[lessonId] = {};
                     }

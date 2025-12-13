@@ -12,36 +12,9 @@ const statMistakes = document.getElementById('stat-mistakes');
 const statAccuracy = document.getElementById('stat-accuracy');
 
 function updateGlobalStats() {
-    let correct = 0;
-    let mistakes = 0;
-
-    Object.keys(Store.state.answers).forEach(lId => {
-        const lessonAnswers = Store.state.answers[lId];
-        const lesson = Store.getLesson(lId);
-        if (!lesson) return;
-
-        // Create a lookup for all gaps in the lesson
-        const gapMap = new Map();
-        lesson.sentences.forEach(s => {
-            if (s.gaps) {
-                s.gaps.forEach(g => gapMap.set(g.id, g));
-            } else {
-                // Fallback for legacy data if any
-                gapMap.set(s.id, { id: s.id, correct: s.correct });
-            }
-        });
-
-        Object.keys(lessonAnswers).forEach(qId => {
-            const userAns = lessonAnswers[qId];
-            // ID keys in object are strings, convert to int for lookup if needed
-            const gap = gapMap.get(parseInt(qId)) || gapMap.get(qId);
-
-            if (gap) {
-                if (userAns.trim().toLowerCase() === gap.correct.trim().toLowerCase()) correct++;
-                else mistakes++;
-            }
-        });
-    });
+    // Use cumulative stats that track every correct/mistake across all sessions
+    const correct = Store.state.globalStats.totalCorrect;
+    const mistakes = Store.state.globalStats.totalMistakes;
 
     const total = correct + mistakes;
     const acc = total === 0 ? 0 : Math.round((correct / total) * 100);
