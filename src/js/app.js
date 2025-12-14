@@ -279,15 +279,15 @@ function QuestionView(lessonId) {
             <span>${index + 1} / ${lesson.sentences.length}</span>
         </div>
 
-        <!-- Navigation Arrows -->
-        <div class="nav-arrow left ${index === 0 ? 'disabled' : ''}" id="prev-btn" title="Previous (Left Arrow)">
-            &#8592;
-        </div>
-        <div class="nav-arrow right" id="next-nav-btn" title="Next (Right Arrow)">
-            &#8594;
-        </div>
-
         <div class="q-box">
+            <!-- Navigation Arrows inside the box -->
+            <div class="nav-arrow left ${index === 0 ? 'disabled' : ''}" id="prev-btn" title="Previous (Left Arrow)">
+                &#8592;
+            </div>
+            <div class="nav-arrow right" id="next-nav-btn" title="Next (Right Arrow)">
+                &#8594;
+            </div>
+
             <div class="q-instruction">COMPLETE THE SENTENCE:</div>
             <div class="q-text">
                 ${sentenceHtml}

@@ -221,7 +221,7 @@ body {
 
 .question-container {
   width: 100%;
-  max-width: 800px;
+  max-width: 95%;
   position: relative;
   margin: auto;
 }
@@ -231,8 +231,8 @@ body {
   display: flex;
   justify-content: space-between;
   margin-bottom: 2rem;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: var(--text-main);
+  font-size: 1rem;
 }
 
 .tag {
@@ -274,6 +274,7 @@ body {
   align-items: center;
   border: 1px solid var(--border);
   margin-bottom: 2rem;
+  position: relative;
 }
 
 .q-instruction {
@@ -319,6 +320,7 @@ body {
   display: flex;
   gap: 1rem;
   justify-content: center;
+  width: 100%;
 }
 
 .opt-btn {
@@ -327,7 +329,7 @@ body {
   border: 1px solid var(--border);
   padding: 1.2rem;
   border-radius: 12px;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -397,7 +399,7 @@ body {
 /* Design shows just states. But we need explanation. */
 .explanation {
   margin-top: 1rem;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--text-muted);
   font-style: italic;
   opacity: 0;
@@ -411,8 +413,7 @@ body {
 /* Navigation Arrows */
 .nav-arrow {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   width: 40px;
@@ -436,11 +437,11 @@ body {
 }
 
 .nav-arrow.left {
-  left: -60px;
+  left: 12px;
 }
 
 .nav-arrow.right {
-  right: -60px;
+  right: 12px;
 }
 
 .nav-arrow.disabled {
@@ -461,18 +462,15 @@ body {
 /* Responsive adjustment for arrows */
 @media (max-width: 900px) {
   .nav-arrow.left {
-    left: 10px;
-    background: rgba(255, 255, 255, 0.8);
+    left: 8px;
   }
 
   .nav-arrow.right {
-    right: 10px;
-    background: rgba(255, 255, 255, 0.8);
+    right: 8px;
   }
 
   .question-container {
-    padding: 0 40px;
-    /* Make space for arrows */
+    padding: 0;
   }
 }
 
@@ -656,7 +654,7 @@ body {
   }
 
   #content-area {
-    padding: 1rem;
+    padding: 0.5rem;
   }
 
   .q-box {
@@ -665,13 +663,13 @@ body {
   }
 
   .q-text {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
   }
 
   .gap-box {
     min-width: 60px;
     height: 40px;
-    font-size: 0.9rem;
+    font-size: 1.7rem;
     padding: 0 0.75rem;
   }
 
@@ -682,7 +680,7 @@ body {
 
   .opt-btn {
     padding: 1rem;
-    font-size: 1rem;
+    font-size: 1.2rem;
     min-height: 50px;
   }
 
@@ -715,7 +713,8 @@ body {
   }
 
   .question-container {
-    padding: 0 50px;
+    padding: 0;
+    max-width: 100%;
   }
 }
 
@@ -753,12 +752,12 @@ body {
   }
 
   #content-area {
-    padding: 0.75rem;
+    padding: 0.5rem;
   }
 
   .q-info {
     margin-bottom: 1rem;
-    font-size: 0.8rem;
+    font-size: 1rem;
   }
 
   .q-box {
@@ -774,7 +773,7 @@ body {
   }
 
   .q-text {
-    font-size: 1.1rem;
+    font-size: 1.8rem;
     line-height: 1.8;
     gap: 0.3rem;
   }
@@ -782,14 +781,14 @@ body {
   .gap-box {
     min-width: 50px;
     height: 34px;
-    font-size: 0.8rem;
+    font-size: 1.7rem;
     padding: 0 0.5rem;
     margin: 0 0.25rem;
     border-radius: 6px;
   }
 
   .explanation {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     margin-top: 0.75rem;
   }
 
@@ -799,7 +798,7 @@ body {
 
   .opt-btn {
     padding: 0.9rem 0.75rem;
-    font-size: 0.95rem;
+    font-size: 1.4rem;
     border-radius: 10px;
     min-height: 48px;
   }
@@ -839,7 +838,8 @@ body {
   }
 
   .question-container {
-    padding: 0 40px;
+    padding: 0;
+    max-width: 100%;
   }
 
   /* Sidebar adjustments */
